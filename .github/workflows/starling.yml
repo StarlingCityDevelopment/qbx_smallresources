@@ -1,0 +1,46 @@
+name: Zip Creator
+
+on:
+  push:
+
+jobs:
+  create-zip:
+    name: Build and Create Downloadable Zip
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install archive tools
+        run: sudo apt install zip
+
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Bundle files
+        run: |
+          mkdir -p ./temp/qbx_smallresources
+          mkdir -p ./temp/qbx_smallresources/locales/
+          cp ./fxmanifest.lua ./temp/qbx_smallresources
+          cp ./{locales/en.json,locales/fr.json} ./temp/qbx_smallresources/locales
+          cp -r ./{anticrash,better_storm,better_weapon_view,cayo,cdx_bodydrag,cdx_driveshake,cdx_fixwater,cdx_seat_persistence,move_head,qbx_afk,qbx_crouch,qbx_cruise,qbx_disableservices,qbx_editor,qbx_entitiesblacklist,qbx_flipvehicle,qbx_hudcomponents,qbx_ignore,qbx_itempickup,qbx_noshuff,qbx_removeentities,qbx_stun,qbx_vehicleradio,stream,tgiann_voice_effect} ./temp/qbx_smallresources
+          cd ./temp && zip -r ../qbx_smallresources.zip ./qbx_smallresources
+
+      - name: Create Release
+        uses: 'marvinpinto/action-automatic-releases@v1.2.1'
+        with:
+          automatic_release_tag: "latest"
+          repo_token: '${{ secrets.GITHUB_TOKEN }}'
+          title: 'Ready to download'
+          prerelease: true
+          files: qbx_smallresources.zip
+        env:
+          CI: false
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.PAT }}
+          repository: StarlingCityDevelopment/resources
+          event-type: update-resources

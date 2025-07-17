@@ -12,7 +12,7 @@ end
 
 lib.onCache('seat', disableAutoShuffle)
 
----Makes the player ped shuffle to the next vehicle seat. 
+---Makes the player ped shuffle to the next vehicle seat.
 local function shuffleSeat(self)
     if QBX.PlayerData.metadata.ishandcuffed then
         return exports.qbx_core:Notify(locale('error.is_handcuffed'), 'error')
