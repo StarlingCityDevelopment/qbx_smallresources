@@ -3,10 +3,18 @@ local disableHudComponents = config.disable.hudComponents
 local disableControls = config.disable.controls
 local displayAmmo = config.disable.displayAmmo
 
+lib.onCache('ped', function()
+    DisableIdleCamera(true)
+    DisableVehiclePassengerIdleCamera(true)
+end)
+
 CreateThread(function()
     for i = 1, #disableHudComponents do
         SetHudComponentSize(disableHudComponents[i],0.0,0.0)
     end
+
+    DisableIdleCamera(true)
+    DisableVehiclePassengerIdleCamera(true)
 
     while true do
         for i = 1, #disableControls do
