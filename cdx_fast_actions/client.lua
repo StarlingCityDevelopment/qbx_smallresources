@@ -1,4 +1,8 @@
 local handsup = false
+local pointing = false
+
+local pointingDict = "anim@mp_point"
+local pointingAnim = "point_fwd"
 
 local handsupDict = "missminuteman_1ig_2"
 local handsupAnim = "handsup_enter"
@@ -14,6 +18,34 @@ local function canExecuteAction()
         not IsPedSwimming(cache.ped) and
         not IsPedClimbing(cache.ped) and
         not IsPedInParachuteFreeFall(cache.ped)
+end
+
+local function pointingThread()
+    pointing = not pointing
+
+    if pointing then
+        lib.requestAnimDict(pointingDict)
+        TaskPlayAnim(cache.ped, pointingDict, pointingAnim, 8.0, -8.0, -1, 50, 0, false, false, false)
+
+        CreateThread(function()
+            while pointing and canExecuteAction() do
+                Wait(0)
+
+                if not IsEntityPlayingAnim(cache.ped, pointingDict, pointingAnim, 3) then
+                    TaskPlayAnim(cache.ped, pointingDict, pointingAnim, 8.0, -8.0, -1, 50, 0, false, false, false)
+                end
+            end
+
+            if IsEntityPlayingAnim(cache.ped, pointingDict, pointingAnim, 3) then
+                pointing = false
+                ClearPedTasks(cache.ped)
+            end
+        end)
+    else
+        if IsEntityPlayingAnim(cache.ped, pointingDict, pointingAnim, 3) then
+            ClearPedTasks(cache.ped)
+        end
+    end
 end
 
 local function handsUpThread()
@@ -62,6 +94,17 @@ lib.addKeybind({
 })
 
 lib.addKeybind({
+    name = 'cdx_fast_actions_pointing',
+    description = 'Pressez SHIFT + B pour pointer du doigt',
+    defaultKey = 'B',
+    onPressed = function()
+        if IsControlPressed(1, 21) and canExecuteAction() then
+            pointingThread()
+        end
+    end
+})
+
+lib.addKeybind({
     name = 'cdx_fast_actions_tackle',
     description = 'Pressez SHIFT + E pour plaquer',
     defaultKey = 'E',
@@ -73,12 +116,13 @@ lib.addKeybind({
             if IsPedInAnyVehicle(targetPed, true) then return end
             self:disable(true)
             TriggerServerEvent('cdx:fastactions:server:TacklePlayer', GetPlayerServerId(targetId))
-            lib.playAnim(cache.ped, 'swimming@first_person@diving', 'dive_run_fwd_-45_loop', 3.0, 3.0, -1, 49, 0, false, false, false)
+            lib.playAnim(cache.ped, 'swimming@first_person@diving', 'dive_run_fwd_-45_loop', 3.0, 3.0, -1, 49, 0, false,
+                false, false)
             Wait(250)
             ClearPedTasks(cache.ped)
             SetPedToRagdoll(cache.ped, 150, 150, 0, false, false, false)
             RemoveAnimDict('swimming@first_person@diving')
-            SetTimeout(1000, function ()
+            SetTimeout(1000, function()
                 self:disable(false)
             end)
         end
