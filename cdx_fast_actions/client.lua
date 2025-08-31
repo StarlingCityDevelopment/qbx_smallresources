@@ -2,7 +2,7 @@ local handsup = false
 local pointing = false
 
 local pointingDict = "anim@mp_point"
-local pointingAnim = "point_fwd"
+local pointingAnim = "task_mp_pointing"
 
 local handsupDict = "missminuteman_1ig_2"
 local handsupAnim = "handsup_enter"
@@ -20,32 +20,77 @@ local function canExecuteAction()
         not IsPedInParachuteFreeFall(cache.ped)
 end
 
+local function stopHandsUp()
+    RequestTaskMoveNetworkStateTransition(cache.ped, 'Stop')
+
+    if not IsPedInjured(cache.ped) then ClearPedSecondaryTask(cache.ped) end
+    if not cache.vehicle then SetPedCurrentWeaponVisible(cache.ped, true, true, true, true) end
+
+    SetPedConfigFlag(cache.ped, 36, false)
+    ClearPedSecondaryTask(cache.ped)
+end
+
+local function stopPointing()
+    RequestTaskMoveNetworkStateTransition(cache.ped, 'Stop')
+
+    if not IsPedInjured(cache.ped) then ClearPedSecondaryTask(cache.ped) end
+    if not cache.vehicle then SetPedCurrentWeaponVisible(cache.ped, true, true, true, true) end
+
+    SetPedConfigFlag(cache.ped, 36, false)
+    ClearPedSecondaryTask(cache.ped)
+end
+
 local function pointingThread()
     pointing = not pointing
 
-    if pointing then
-        lib.requestAnimDict(pointingDict)
-        TaskPlayAnim(cache.ped, pointingDict, pointingAnim, 8.0, -8.0, -1, 50, 0, false, false, false)
+    lib.requestAnimDict('anim@mp_point')
+    SetPedCurrentWeaponVisible(cache.ped, false, true, true, true)
+    SetPedConfigFlag(cache.ped, 36, true)
+    TaskMoveNetworkByName(cache.ped, 'task_mp_pointing', 0.5, false, 'anim@mp_point', 24)
+    RemoveAnimDict('anim@mp_point')
 
-        CreateThread(function()
-            while pointing and canExecuteAction() do
-                Wait(0)
+    CreateThread(function()
+        while pointing and canExecuteAction() do
+            Wait(0)
 
-                if not IsEntityPlayingAnim(cache.ped, pointingDict, pointingAnim, 3) then
-                    TaskPlayAnim(cache.ped, pointingDict, pointingAnim, 8.0, -8.0, -1, 50, 0, false, false, false)
-                end
+            local camPitch = GetGameplayCamRelativePitch()
+
+            if camPitch < -70.0 then
+                camPitch = -70.0
+            elseif camPitch > 42.0 then
+                camPitch = 42.0
             end
 
-            if IsEntityPlayingAnim(cache.ped, pointingDict, pointingAnim, 3) then
-                pointing = false
-                ClearPedTasks(cache.ped)
+            camPitch = (camPitch + 70.0) / 112.0
+
+            local camHeading = GetGameplayCamRelativeHeading()
+            local cosCamHeading = Cos(camHeading)
+            local sinCamHeading = Sin(camHeading)
+
+            if camHeading < -180.0 then
+                camHeading = -180.0
+            elseif camHeading > 180.0 then
+                camHeading = 180.0
             end
-        end)
-    else
-        if IsEntityPlayingAnim(cache.ped, pointingDict, pointingAnim, 3) then
-            ClearPedTasks(cache.ped)
+
+            camHeading = (camHeading + 180.0) / 360.0
+
+            local coords = GetOffsetFromEntityInWorldCoords(cache.ped,
+                (cosCamHeading * -0.2) - (sinCamHeading * (0.4 * camHeading + 0.3)),
+                (sinCamHeading * -0.2) + (cosCamHeading * (0.4 * camHeading + 0.3)), 0.6)
+            local ray = StartShapeTestCapsule(coords.x, coords.y, coords.z - 0.2, coords.x, coords.y, coords.z + 0.2,
+                0.4, 95, cache.ped, 7)
+            local _, blocked = GetShapeTestResult(ray)
+
+            SetTaskMoveNetworkSignalFloat(cache.ped, 'Pitch', camPitch)
+            SetTaskMoveNetworkSignalFloat(cache.ped, 'Heading', camHeading * -1.0 + 1.0)
+            SetTaskMoveNetworkSignalBool(cache.ped, 'isBlocked', blocked)
+            SetTaskMoveNetworkSignalBool(cache.ped, 'isFirstPerson',
+                GetCamViewModeForContext(GetCamActiveViewModeContext()) == 4)
         end
-    end
+
+        stopPointing()
+    end)
 end
 
 local function handsUpThread()
@@ -75,10 +120,7 @@ local function handsUpThread()
             end
         end
 
-        if IsEntityPlayingAnim(cache.ped, handsupDict, handsupAnim, 3) then
-            handsup = false
-            ClearPedTasks(cache.ped)
-        end
+        stopHandsUp()
     end)
 end
 
@@ -128,6 +170,12 @@ lib.addKeybind({
         end
     end
 })
+
+AddEventHandler('onResourceStop', function(resourceName)
+    if GetCurrentResourceName() ~= resourceName then return end
+    if handsup then stopHandsUp() end
+    if pointing then stopPointing() end
+end)
 
 RegisterNetEvent('cdx:fastactions:client:GetTackled', function()
     SetPedToRagdoll(cache.ped, 7000, 7000, 0, false, false, false)
