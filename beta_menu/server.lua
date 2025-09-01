@@ -52,11 +52,12 @@ RegisterServerEvent('betatest:spawnvehicle', function(vehicleModel)
 
     local spawnCoords = vector3(coords.x + 2.0, coords.y, coords.z + 0.5)
 
-    qbx.spawnVehicle({
-        model = `asbo`,
+    local netId, entity = qbx.spawnVehicle({
+        model = jooat(vehicleModel),
         spawnSource = vec4(spawnCoords.x, spawnCoords.y, spawnCoords.z, heading),
         warp = ped,
     })
+    exports['qs-vehiclekeys']:GiveServerKeys(src, qbx.getVehiclePlate(entity), vehicleModel)
 end)
 
 RegisterServerEvent('betatest:revive', function()

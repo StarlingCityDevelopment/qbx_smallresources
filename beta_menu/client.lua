@@ -198,7 +198,7 @@ local function showJobsMenu()
         contextId = 'beta_jobs',
         title = Config.texts.titles.jobs,
         category = 'métiers',
-        dataSource = QBX.Shared.Jobs,
+        dataSource = exports.qbx_core:GetJobs(),
         placeholder = Config.texts.placeholders.searchJob,
         getTitle = function(name, job) return job.label end,
         onSelect = function(name, job) showGradesMenu('job', name, job) end
@@ -210,7 +210,7 @@ local function showGangsMenu()
         contextId = 'beta_gangs',
         title = Config.texts.titles.gangs,
         category = 'gangs',
-        dataSource = QBX.Shared.Gangs,
+        dataSource = exports.qbx_core:GetGangs(),
         placeholder = Config.texts.placeholders.searchGang,
         getTitle = function(name, gang) return gang.label end,
         onSelect = function(name, gang) showGradesMenu('gang', name, gang) end
