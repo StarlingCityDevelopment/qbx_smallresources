@@ -11,11 +11,18 @@ local Config = {
         panto = 'panto'
     },
     teleports = {
-        { name = 'Spawn',          coords = vector3(-264.4, -2989.0, 6.0) },
-        { name = 'Police Station', coords = vector3(428.9, -984.5, 30.7) },
-        { name = 'Hospital',       coords = vector3(307.2, -1433.4, 29.9) },
-        { name = 'Garage Central', coords = vector3(215.9, -810.1, 30.7) },
-        { name = 'Aéroport',       coords = vector3(-1037.8, -2737.6, 20.2) }
+        {
+            name = 'Spawn',
+            coords = vec4(-1103.21, -2850.74, 14.89, 332.57)
+        },
+        {
+            name = 'Police',
+            coords = vec4(-580.9, -404.89, 35.18, 178.6)
+        },
+        {
+            name = 'Hôpital',
+            coords = vec4(337.86, -1393.94, 32.51, 229.05)
+        }
     },
     texts = {
         titles = {

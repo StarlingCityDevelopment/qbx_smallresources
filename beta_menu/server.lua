@@ -71,6 +71,7 @@ RegisterServerEvent('betatest:teleport', function(coords)
 
     local ped = GetPlayerPed(src)
     SetEntityCoords(ped, coords.x, coords.y, coords.z, false, false, false, true)
+    SetEntityHeading(ped, coords.w)
 
     lib.notify(src, {
         title = 'Téléportation',
