@@ -23,7 +23,7 @@ jobs:
           mkdir -p ./temp/qbx_smallresources/locales/
           cp ./fxmanifest.lua ./temp/qbx_smallresources
           cp ./{locales/en.json,locales/fr.json} ./temp/qbx_smallresources/locales
-          cp -r ./{anticrash,beta_menu,better_storm,better_weapon_view,cayo,cdx_bodydrag,cdx_driveshake,cdx_fast_actions,cdx_fixwater,cdx_seat_persistence,move_head,qbx_afk,qbx_crouch,qbx_cruise,qbx_disableservices,qbx_editor,qbx_entitiesblacklist,qbx_flipvehicle,qbx_hudcomponents,qbx_ignore,qbx_itempickup,qbx_noshuff,qbx_removeentities,qbx_stun,qbx_vehicleradio,stream,tgiann_voice_effect} ./temp/qbx_smallresources
+          cp -r ./{anticrash,beta_menu,better_storm,better_weapon_view,cayo,cdx_bodydrag,cdx_driveshake,cdx_fast_actions,cdx_fixwater,cdx_seat_persistence,move_head,qbx_crouch,qbx_cruise,qbx_disableservices,qbx_editor,qbx_entitiesblacklist,qbx_flipvehicle,qbx_hudcomponents,qbx_ignore,qbx_itempickup,qbx_noshuff,qbx_removeentities,qbx_stun,qbx_vehicleradio,stream,tgiann_voice_effect} ./temp/qbx_smallresources
           cd ./temp && zip -r ../qbx_smallresources.zip ./qbx_smallresources
 
       - name: Create Release
