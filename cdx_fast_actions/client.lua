@@ -40,57 +40,62 @@ local function stopPointing()
     ClearPedSecondaryTask(cache.ped)
 end
 
-local function pointingThread()
+local function pointLoop()
     pointing = not pointing
 
-    lib.requestAnimDict('anim@mp_point')
-    SetPedCurrentWeaponVisible(cache.ped, false, true, true, true)
-    SetPedConfigFlag(cache.ped, 36, true)
-    TaskMoveNetworkByName(cache.ped, 'task_mp_pointing', 0.5, false, 'anim@mp_point', 24)
-    RemoveAnimDict('anim@mp_point')
+    if pointing then
+        if cache.vehicle then return end
 
-    CreateThread(function()
-        while pointing and canExecuteAction() do
-            Wait(0)
+        lib.requestAnimDict(pointingDict)
+        SetPedCurrentWeaponVisible(cache.ped, false, true, true, true)
+        SetPedConfigFlag(cache.ped, 36, true)
+        TaskMoveNetworkByName(cache.ped, pointingAnim, 0.5, false, pointingDict, 24)
+        RemoveAnimDict(pointingDict)
+        CreateThread(function()
+            while pointing do
+                Wait(0)
 
-            local camPitch = GetGameplayCamRelativePitch()
+                local camPitch = GetGameplayCamRelativePitch()
 
-            if camPitch < -70.0 then
-                camPitch = -70.0
-            elseif camPitch > 42.0 then
-                camPitch = 42.0
+                if camPitch < -70.0 then
+                    camPitch = -70.0
+                elseif camPitch > 42.0 then
+                    camPitch = 42.0
+                end
+
+                camPitch = (camPitch + 70.0) / 112.0
+
+                local camHeading = GetGameplayCamRelativeHeading()
+                local cosCamHeading = Cos(camHeading)
+                local sinCamHeading = Sin(camHeading)
+
+                if camHeading < -180.0 then
+                    camHeading = -180.0
+                elseif camHeading > 180.0 then
+                    camHeading = 180.0
+                end
+
+                camHeading = (camHeading + 180.0) / 360.0
+
+                local coords = GetOffsetFromEntityInWorldCoords(cache.ped, (cosCamHeading * -0.2) - (sinCamHeading * (0.4 * camHeading + 0.3)), (sinCamHeading * -0.2) + (cosCamHeading * (0.4 * camHeading + 0.3)), 0.6)
+                local ray = StartShapeTestCapsule(coords.x, coords.y, coords.z - 0.2, coords.x, coords.y, coords.z + 0.2, 0.4, 95, cache.ped, 7)
+                local _, blocked = GetShapeTestResult(ray)
+
+                SetTaskMoveNetworkSignalFloat(cache.ped, 'Pitch', camPitch)
+                SetTaskMoveNetworkSignalFloat(cache.ped, 'Heading', camHeading * -1.0 + 1.0)
+                SetTaskMoveNetworkSignalBool(cache.ped, 'isBlocked', blocked)
+                SetTaskMoveNetworkSignalBool(cache.ped, 'isFirstPerson', GetCamViewModeForContext(GetCamActiveViewModeContext()) == 4)
             end
+        end)
+    else
+        RequestTaskMoveNetworkStateTransition(cache.ped, 'Stop')
 
-            camPitch = (camPitch + 70.0) / 112.0
+        if not IsPedInjured(cache.ped) then ClearPedSecondaryTask(cache.ped) end
+        if not cache.vehicle then SetPedCurrentWeaponVisible(cache.ped, true, true, true, true) end
 
-            local camHeading = GetGameplayCamRelativeHeading()
-            local cosCamHeading = Cos(camHeading)
-            local sinCamHeading = Sin(camHeading)
-
-            if camHeading < -180.0 then
-                camHeading = -180.0
-            elseif camHeading > 180.0 then
-                camHeading = 180.0
-            end
-
-            camHeading = (camHeading + 180.0) / 360.0
-
-            local coords = GetOffsetFromEntityInWorldCoords(cache.ped,
-                (cosCamHeading * -0.2) - (sinCamHeading * (0.4 * camHeading + 0.3)),
-                (sinCamHeading * -0.2) + (cosCamHeading * (0.4 * camHeading + 0.3)), 0.6)
-            local ray = StartShapeTestCapsule(coords.x, coords.y, coords.z - 0.2, coords.x, coords.y, coords.z + 0.2,
-                0.4, 95, cache.ped, 7)
-            local _, blocked = GetShapeTestResult(ray)
-
-            SetTaskMoveNetworkSignalFloat(cache.ped, 'Pitch', camPitch)
-            SetTaskMoveNetworkSignalFloat(cache.ped, 'Heading', camHeading * -1.0 + 1.0)
-            SetTaskMoveNetworkSignalBool(cache.ped, 'isBlocked', blocked)
-            SetTaskMoveNetworkSignalBool(cache.ped, 'isFirstPerson',
-                GetCamViewModeForContext(GetCamActiveViewModeContext()) == 4)
-        end
-
-        stopPointing()
-    end)
+        SetPedConfigFlag(cache.ped, 36, false)
+        ClearPedSecondaryTask(cache.ped)
+    end
 end
 
 local function handsUpThread()
@@ -141,7 +146,7 @@ lib.addKeybind({
     defaultKey = 'B',
     onPressed = function()
         if IsControlPressed(1, 21) and canExecuteAction() then
-            pointingThread()
+            pointLoop()
         end
     end
 })
