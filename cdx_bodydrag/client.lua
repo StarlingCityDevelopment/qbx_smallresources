@@ -4,9 +4,6 @@ local isDragging = playerState.isDragging
 
 local Wait = Wait
 local ClearPedTasks = ClearPedTasks
-local RemoveAnimDict = RemoveAnimDict
-local GetAnimDuration = GetAnimDuration
-local TaskPlayAnim = TaskPlayAnim
 local IsEntityPlayingAnim = IsEntityPlayingAnim
 local AttachEntityToEntity = AttachEntityToEntity
 local IsEntityAttachedToEntity = IsEntityAttachedToEntity
@@ -30,20 +27,13 @@ local function dragPlayer(ped, state)
     TriggerServerEvent('cdx:bodydrag:server:setDragEscort', GetPlayerServerId(id), state)
 end
 
-local function loadAnimation(dict, anim)
-    lib.requestAnimDict(dict)
-    local duration = GetAnimDuration(dict, anim)
-    TaskPlayAnim(cache.ped, dict, anim, 8.0, 8.0, duration, 1, 0.0, false, false, false)
-    Wait(duration)
-end
-
 local function setDragged(serverId)
     local dict = 'combat@drag_ped@'
     local intro = 'injured_pickup_back_ped'
     local loop = 'injured_drag_ped'
     local outro = 'injured_putdown_ped'
 
-    loadAnimation(dict, intro)
+    lib.playAnim(cache.ped, dict, intro, 8.0, 8.0, -1, 1, 0.0, false, false, false)
 
     while isDragged do
         local player = GetPlayerFromServerId(serverId)
@@ -56,14 +46,13 @@ local function setDragged(serverId)
         end
 
         if not IsEntityPlayingAnim(cache.ped, dict, loop, 3) then
-            TaskPlayAnim(cache.ped, dict, loop, 8.0, -8, -1, 1, 0.0, false, false, false)
+            lib.playAnim(cache.ped, dict, loop, 8.0, -8, -1, 1, 0.0, false, false, false)
         end
 
-        Wait(0)
+        Wait(100)
     end
 
-    loadAnimation(dict, outro)
-    RemoveAnimDict(dict)
+    lib.playAnim(cache.ped, dict, outro, 8.0, 8.0, -1, 1, 0.0, false, false, false)
     ClearPedTasks(cache.ped)
 
     playerState:set('isDragged', false, true)
@@ -75,17 +64,16 @@ local function setDragging()
     local loop = 'injured_drag_plyr'
     local outro = 'injured_putdown_plyr'
 
-    loadAnimation(dict, intro)
+    lib.playAnim(cache.ped, dict, intro, 8.0, 8.0, -1, 1, 0.0, false, false, false)
 
     while isDragging do
         if not IsEntityPlayingAnim(cache.ped, dict, loop, 3) then
-            TaskPlayAnim(cache.ped, dict, loop, 8.0, 8.0, -1, 51, 0.0, false, false, false)
+            lib.playAnim(cache.ped, dict, loop, 8.0, 8.0, -1, 51, 0.0, false, false, false)
         end
-        Wait(0)
+        Wait(100)
     end
 
-    loadAnimation(dict, outro)
-    RemoveAnimDict(dict)
+    lib.playAnim(cache.ped, dict, outro, 8.0, 8.0, -1, 1, 0.0, false, false, false)
     ClearPedTasks(cache.ped)
 
     playerState:set('isDragging', false, true)
@@ -107,6 +95,12 @@ AddStateBagChangeHandler('isDragging', ('player:%s'):format(cache.serverId), fun
     isDragging = value
     if value then
         setDragging()
+    end
+end)
+
+AddStateBagChangeHandler('dead', ('player:%s'):format(cache.serverId), function(_, _, value)
+    if value and isDragging then
+        TriggerServerEvent('cdx:bodydrag:server:setDragEscort', cache.serverId, false)
     end
 end)
 

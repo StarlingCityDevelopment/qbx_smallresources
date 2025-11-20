@@ -1,13 +1,21 @@
-CreateThread(function()
-    while true do
-        Wait(3000)
-        local weather = LocalPlayer.state['playerWeather'] or "CLEAR"
-        if weather:upper() == "THUNDER" or weather:upper() == "STORM" then
-            ShakeGameplayCam("SMALL_EXPLOSION_SHAKE", 0.3)
-            SetWind(100.0)
+AddStateBagChangeHandler('weather', 'global', function(_, _, value)
+    if value then
+        if value:upper() == "THUNDER" or value:upper() == "STORM" then
+            SetTimeout(0, function()
+                CreateThread(function()
+                    while true do
+                        ShakeGameplayCam("SMALL_EXPLOSION_SHAKE", 0.3)
+                        SetWind(100.0)
+                        Wait(5000)
+                    end
+                end)
+            end)
         else
             SetWind(0.0)
             StopGameplayCamShaking(false)
         end
+    else
+        SetWind(0.0)
+        StopGameplayCamShaking(false)
     end
 end)

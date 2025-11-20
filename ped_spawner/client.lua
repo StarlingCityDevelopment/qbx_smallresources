@@ -470,9 +470,9 @@ function OpenPedMenu()
     lib.showContext('ped_menu')
 end
 
-RegisterCommand('pedmenu', function()
-    OpenPedMenu()
-end, false)
+-- RegisterCommand('pedmenu', function()
+--     OpenPedMenu()
+-- end, false)
 
 AddEventHandler('onResourceStop', function(resourceName)
     if GetCurrentResourceName() ~= resourceName then return end

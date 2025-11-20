@@ -1,31 +1,60 @@
-local island = lib.load("cayo.config")
+---@class cayo
+local cayo = {}
+cayo.__index = cayo
 
-for _, ipl in pairs(island) do
-    RequestIpl(ipl)
+cayo.coords = vec3(5046.0, -5106.0, 6.0)
+cayo.radius = 1500.0
+cayo.active = false
+
+cayo.ipls = require 'cayo.config'
+
+function cayo:toggleIpls(toggle)
+    local toggleIpl = toggle and RequestIpl or RemoveIpl
+    for _, name in ipairs(cayo.ipls) do
+        toggleIpl(name)
+    end
 end
 
-SetAudioFlag("DisableFlightMusic", true)
-SetAmbientZoneListStatePersistent("AZL_DLC_Hei4_Island_Zones", true, true)
-SetAmbientZoneListStatePersistent("AZL_DLC_Hei4_Island_Disabled_Zones", false, true)
-SetZoneEnabled(GetZoneFromNameId("PrLog"), false)
+function cayo:adapt()
+    local islandZoneId = GetZoneFromNameId('PrLog')
+    SetAudioFlag('DisableFlightMusic', true)
+    SetAmbientZoneListStatePersistent('AZL_DLC_Hei4_Island_Zones', true, true)
+    SetAmbientZoneListStatePersistent('AZL_DLC_Hei4_Island_Disabled_Zones', false, true)
+    SetZoneEnabled(islandZoneId, false)
+end
 
-lib.points.new({
-    coords = vec3(5046, -5106, 6),
-    distance = 2500,
-    onEnter = function()
-        SetAiGlobalPathNodesType(1)
-        LoadGlobalWaterType(1)
-    end,
-    onExit = function()
-        SetAiGlobalPathNodesType(0)
-        LoadGlobalWaterType(0)
-    end,
-})
+function cayo:toggleState(toggle)
+    local status = toggle and 1 or 0
+    SetAiGlobalPathNodesType(status)
+    LoadGlobalWaterType(status)
+    self.active = toggle
+end
 
-AddEventHandler("onResourceStop", function(resourceName)
-    local scriptName = cache.resource or GetCurrentResourceName()
-    if resourceName ~= scriptName then return end
-    for _, ipl in pairs(island) do
-        RemoveIpl(ipl)
+function cayo:update()
+    local playerPed = PlayerPedId()
+    local distance = #(GetEntityCoords(playerPed) - self.coords)
+    if distance < self.radius then
+        if not self.active then
+            self:toggleState(true)
+        end
+    else
+        if self.active then
+            self:toggleState(false)
+        end
     end
+end
+
+CreateThread(function()
+    cayo:toggleIpls(true)
+    cayo:adapt()
+    while true do
+        cayo:update()
+        Wait(1000)
+    end
+end)
+
+AddEventHandler('onResourceStop', function(resourceName)
+    if resourceName ~= GetCurrentResourceName() then return end
+    cayo:toggleIpls(false)
+    cayo:toggleState(false)
 end)
