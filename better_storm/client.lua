@@ -1,6 +1,6 @@
 AddStateBagChangeHandler('weather', 'global', function(_, _, value)
     if value then
-        if value:upper() == "THUNDER" or value:upper() == "STORM" then
+        if value.weather:upper() == "THUNDER" or value.weather:upper() == "STORM" then
             SetTimeout(0, function()
                 CreateThread(function()
                     while true do
