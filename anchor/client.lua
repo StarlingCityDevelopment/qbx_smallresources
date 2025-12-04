@@ -1,6 +1,7 @@
 local textUI = false
 
 local function reset()
+    if not textUI then return end
     textUI = false
     lib.hideTextUI()
 end
@@ -37,6 +38,11 @@ lib.onCache('seat', function(seat)
     end
 
     if not cache.vehicle then
+        keybind:disable(true)
+        return reset()
+    end
+
+    if not IsThisModelABoat(GetEntityModel(cache.vehicle)) then
         keybind:disable(true)
         return reset()
     end
