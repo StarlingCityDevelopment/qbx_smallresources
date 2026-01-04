@@ -1,20 +1,26 @@
+local isStormActive = false
+
+local function HandleShake()
+    if not isStormActive then return end
+    ShakeGameplayCam("SMALL_EXPLOSION_SHAKE", 0.15)
+    SetWind(100.0)
+    SetTimeout(math.random(10000, 25000), function()
+        HandleShake()
+    end)
+end
+
 AddStateBagChangeHandler('weather', 'global', function(_, _, value)
     if value then
         if value.weather:upper() == "THUNDER" or value.weather:upper() == "STORM" then
-            SetTimeout(0, function()
-                CreateThread(function()
-                    while true do
-                        ShakeGameplayCam("SMALL_EXPLOSION_SHAKE", 0.3)
-                        SetWind(100.0)
-                        Wait(5000)
-                    end
-                end)
-            end)
+            isStormActive = true
+            HandleShake()
         else
+            isStormActive = false
             SetWind(0.0)
             StopGameplayCamShaking(false)
         end
     else
+        isStormActive = false
         SetWind(0.0)
         StopGameplayCamShaking(false)
     end
