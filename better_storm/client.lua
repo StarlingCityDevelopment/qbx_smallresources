@@ -2,9 +2,12 @@ local isStormActive = false
 
 local function HandleShake()
     if not isStormActive then return end
-    ShakeGameplayCam("SMALL_EXPLOSION_SHAKE", 0.15)
-    SetWind(100.0)
-    SetTimeout(math.random(10000, 25000), function()
+    local interior = GetInteriorFromEntity(PlayerPedId())
+    if not interior or interior == 0 then
+        ShakeGameplayCam("SMALL_EXPLOSION_SHAKE", 0.10)
+        SetWind(100.0)
+    end
+    SetTimeout(math.random(25000, 45000), function()
         HandleShake()
     end)
 end
