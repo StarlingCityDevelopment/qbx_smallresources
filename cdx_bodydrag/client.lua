@@ -1,21 +1,6 @@
 local playerState = LocalPlayer.state
-local isDragged = playerState.isDragged
-local isDragging = playerState.isDragging
-
-local Wait = Wait
-local ClearPedTasks = ClearPedTasks
-local IsEntityPlayingAnim = IsEntityPlayingAnim
-local AttachEntityToEntity = AttachEntityToEntity
-local IsEntityAttachedToEntity = IsEntityAttachedToEntity
-local IsEntityAttached = IsEntityAttached
-local DetachEntity = DetachEntity
-local GetPlayerPed = GetPlayerPed
-local GetPlayerServerId = GetPlayerServerId
-local GetPlayerFromServerId = GetPlayerFromServerId
-local NetworkGetPlayerIndexFromPed = NetworkGetPlayerIndexFromPed
-local TriggerServerEvent = TriggerServerEvent
-local AddStateBagChangeHandler = AddStateBagChangeHandler
-local CreateThread = CreateThread
+local isDragged = false
+local isDragging = false
 
 local function isTargetDead(entity)
     local id = NetworkGetPlayerIndexFromPed(entity)
@@ -27,113 +12,149 @@ local function dragPlayer(ped, state)
     TriggerServerEvent('cdx:bodydrag:server:setDragEscort', GetPlayerServerId(id), state)
 end
 
-local function setDragged(serverId)
+local function setDragged(draggerId)
     local dict = 'combat@drag_ped@'
-    local intro = 'injured_pickup_back_ped'
-    local loop = 'injured_drag_ped'
-    local outro = 'injured_putdown_ped'
+    local anim = 'injured_drag_ped'
 
-    lib.playAnim(cache.ped, dict, intro, 8.0, 8.0, -1, 1, 0.0, false, false, false)
+    lib.requestAnimDict(dict)
 
-    while isDragged do
-        local player = GetPlayerFromServerId(serverId)
-        local ped = player > 0 and GetPlayerPed(player)
+    local draggerPlayer = GetPlayerFromServerId(draggerId)
+    local draggerPed = draggerPlayer ~= -1 and GetPlayerPed(draggerPlayer) or nil
 
-        if not ped then break end
-
-        if not IsEntityAttachedToEntity(cache.ped, ped) then
-            AttachEntityToEntity(cache.ped, ped, 11816, 0.25, 0.48, 0.0, 0.0, 0.0, 0.0, false, false, true, true, 2, true)
-        end
-
-        if not IsEntityPlayingAnim(cache.ped, dict, loop, 3) then
-            lib.playAnim(cache.ped, dict, loop, 8.0, -8, -1, 1, 0.0, false, false, false)
-        end
-
-        Wait(100)
+    if draggerPed then
+        AttachEntityToEntity(cache.ped, draggerPed, 11816, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, false, false, false, false, 2,
+            true)
     end
 
-    lib.playAnim(cache.ped, dict, outro, 8.0, 8.0, -1, 1, 0.0, false, false, false)
-    ClearPedTasks(cache.ped)
+    while isDragged do
+        draggerPlayer = GetPlayerFromServerId(draggerId)
+        draggerPed = draggerPlayer ~= -1 and GetPlayerPed(draggerPlayer) or nil
 
+        if draggerPed and DoesEntityExist(draggerPed) then
+            SetEntityNoCollisionEntity(cache.ped, draggerPed, true)
+
+            if not IsEntityAttachedToEntity(cache.ped, draggerPed) then
+                AttachEntityToEntity(cache.ped, draggerPed, 11816, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, false, false, false,
+                    false, 2, true)
+            end
+        end
+
+        if not IsEntityPlayingAnim(cache.ped, dict, anim, 3) then
+            lib.playAnim(cache.ped, dict, anim)
+        end
+
+        Wait(0)
+    end
+
+    DetachEntity(cache.ped, true, false)
+    ClearPedTasks(cache.ped)
     playerState:set('isDragged', false, true)
 end
 
-local function setDragging()
+local function setDragging(targetId)
     local dict = 'combat@drag_ped@'
-    local intro = 'injured_pickup_back_plyr'
-    local loop = 'injured_drag_plyr'
-    local outro = 'injured_putdown_plyr'
+    local anim = 'injured_drag_plyr'
 
-    lib.playAnim(cache.ped, dict, intro, 8.0, 8.0, -1, 1, 0.0, false, false, false)
+    lib.requestAnimDict(dict)
+    lib.showTextUI('[E] Arrêter de traîner')
+
+    local currentViewMode = GetFollowPedCamViewMode()
+    SetFollowPedCamViewMode(4)
 
     while isDragging do
-        if not IsEntityPlayingAnim(cache.ped, dict, loop, 3) then
-            lib.playAnim(cache.ped, dict, loop, 8.0, 8.0, -1, 51, 0.0, false, false, false)
+        local targetPlayer = GetPlayerFromServerId(targetId)
+        local targetPed = targetPlayer ~= -1 and GetPlayerPed(targetPlayer) or nil
+
+        if targetPed and DoesEntityExist(targetPed) then
+            SetEntityNoCollisionEntity(cache.ped, targetPed, true)
         end
-        Wait(100)
+
+        if not IsEntityPlayingAnim(cache.ped, dict, anim, 3) then
+            lib.playAnim(cache.ped, dict, anim, 8.0, -8.0, -1, 49)
+        end
+
+        if GetFollowPedCamViewMode() ~= 4 then
+            SetFollowPedCamViewMode(4)
+        end
+
+        if IsControlJustPressed(0, 38) then
+            TriggerServerEvent('cdx:bodydrag:server:setDragEscort', targetId, false)
+            Wait(100)
+        end
+
+        Wait(0)
     end
 
-    lib.playAnim(cache.ped, dict, outro, 8.0, 8.0, -1, 1, 0.0, false, false, false)
-    ClearPedTasks(cache.ped)
+    SetFollowPedCamViewMode(currentViewMode)
 
+    ClearPedTasks(cache.ped)
+    lib.hideTextUI()
     playerState:set('isDragging', false, true)
 end
 
 AddStateBagChangeHandler('isDragged', ('player:%s'):format(cache.serverId), function(_, _, value)
     isDragged = value
-
-    if IsEntityAttached(cache.ped) then
-        DetachEntity(cache.ped, true, false)
-    end
-
     if value then
-        setDragged(value)
+        CreateThread(function()
+            setDragged(value)
+        end)
     end
 end)
 
 AddStateBagChangeHandler('isDragging', ('player:%s'):format(cache.serverId), function(_, _, value)
     isDragging = value
     if value then
-        setDragging()
+        CreateThread(function()
+            setDragging(value)
+        end)
     end
 end)
 
 AddStateBagChangeHandler('dead', ('player:%s'):format(cache.serverId), function(_, _, value)
     if value and isDragging then
-        TriggerServerEvent('cdx:bodydrag:server:setDragEscort', cache.serverId, false)
+        TriggerServerEvent('cdx:bodydrag:server:setDragEscort', isDragging, false)
     end
 end)
 
-if isDragged then
-    CreateThread(function()
-        setDragged(isDragged)
-    end)
-end
+CreateThread(function()
+    Wait(500)
 
-if isDragging then
-    CreateThread(function()
-        setDragging()
-    end)
-end
+    local state = playerState.isDragged
+    if state then
+        isDragged = state
+        setDragged(state)
+    end
+
+    local draggingState = playerState.isDragging
+    if draggingState then
+        isDragging = draggingState
+        setDragging(draggingState)
+    end
+end)
 
 exports.ox_target:addGlobalPlayer({
     {
         name = 'cdx:bodydrag:attach',
         icon = 'fas fa-hands-bound',
-        label = locale('actions.drag_player'),
+        label = 'Traîner la personne',
         canInteract = function(entity)
-            return not playerState.invBusy and not IsEntityAttachedToEntity(entity, cache.ped) and isTargetDead(entity)
+            return not playerState.invBusy and not IsEntityAttachedToEntity(entity, cache.ped) and
+                not IsPedInAnyVehicle(entity, true)
         end,
         onSelect = function(data)
-            dragPlayer(data.entity, true)
+            if isTargetDead(data.entity) then
+                dragPlayer(data.entity, true)
+            else
+                lib.notify({ type = 'error', description = 'Player is not conscious.' })
+            end
         end
     },
     {
         name = 'cdx:bodydrag:dettach',
         icon = 'fas fa-hands-bound',
-        label = locale('actions.stop_dragging'),
+        label = 'Arrêter de traîner',
         canInteract = function(entity)
-            return not playerState.invBusy and IsEntityAttachedToEntity(entity, cache.ped) and isTargetDead(entity)
+            return not playerState.invBusy and IsEntityAttachedToEntity(entity, cache.ped)
         end,
         onSelect = function(data)
             dragPlayer(data.entity, false)
