@@ -69,7 +69,7 @@ local function CleanupCameraImmediate()
 end
 
 local function DrawTacticalReticle()
-    DrawRect(0.5, 0.5, 0.0030, 0.0030, 255, 255, 255, 200)
+    -- DrawRect(0.5, 0.5, 0.0030, 0.0030, 255, 255, 255, 200)
 end
 
 function Lean.Update(ped, isAiming, qPressed, ePressed)
