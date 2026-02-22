@@ -42,5 +42,11 @@
    "actions": {
       "push_vehicle": "Appuyez sur [~g~MAJ~w~] et [~g~E~w~] pour pousser le véhicule jusqu'à relâchement de [~g~MAJ~w~]",
       "toggle_cruise_control": "Activer/Désactiver le régulateur de vitesse"
+   },
+   "hide_in_trunk": {
+      "vehicle_locked": "Véhicule verrouillé!",
+      "trunk_occupied": "Le coffre est déjà occupé!",
+      "controls": "[E] Sortir du coffre [H] Ouvrir/Fermer le coffre",
+      "label": "Se cacher dans le coffre"
    }
 }
