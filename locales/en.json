@@ -48,5 +48,25 @@
       "trunk_occupied": "Trunk is already occupied!",
       "controls": "[E] Leave Trunk [H] Toggle Trunk Door",
       "label": "Hide in Trunk"
+   },
+   "carry": {
+      "notify_title": "Carry",
+      "player_label": "Carry Player",
+      "cancel_description": "Cancel carrying a player",
+      "in_progress": "[X] - Stop Carrying",
+      "request_header": "Carry Request",
+      "request_message": "%s wants to carry you. Do you accept?",
+      "request_accept": "Accept",
+      "request_deny": "Deny",
+      "error_being_carried": "You cannot carry while being carried.",
+      "error_already_carrying": "You are already carrying someone.",
+      "error_carrier_in_vehicle": "You cannot carry from inside a vehicle.",
+      "error_invalid_target": "Invalid target.",
+      "error_target_too_far": "Target is too far away.",
+      "error_target_in_vehicle": "Target is inside a vehicle.",
+      "error_target_busy": "Target is already involved in a carry.",
+      "error_request_denied": "Your carry request was denied.",
+      "error_carrier_unavailable": "The carrier is no longer available.",
+      "error_target_unavailable": "The target is no longer available."
    }
 }

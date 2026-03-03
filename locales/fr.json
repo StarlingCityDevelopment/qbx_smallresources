@@ -48,5 +48,25 @@
       "trunk_occupied": "Le coffre est déjà occupé!",
       "controls": "[E] Sortir du coffre [H] Ouvrir/Fermer le coffre",
       "label": "Se cacher dans le coffre"
+   },
+   "carry": {
+      "notify_title": "Transport",
+      "player_label": "Porter un joueur",
+      "cancel_description": "Annuler le transport d'un joueur",
+      "in_progress": "[X] - Arrêter de porter",
+      "request_header": "Demande de transport",
+      "request_message": "%s veut vous porter. Acceptez-vous ?",
+      "request_accept": "Accepter",
+      "request_deny": "Refuser",
+      "error_being_carried": "Vous ne pouvez pas porter quelqu'un pendant que vous êtes porté.",
+      "error_already_carrying": "Vous portez déjà quelqu'un.",
+      "error_carrier_in_vehicle": "Vous ne pouvez pas porter depuis l'intérieur d'un véhicule.",
+      "error_invalid_target": "Cible invalide.",
+      "error_target_too_far": "La cible est trop loin.",
+      "error_target_in_vehicle": "La cible est dans un véhicule.",
+      "error_target_busy": "La cible est déjà impliquée dans un transport.",
+      "error_request_denied": "Votre demande de transport a été refusée.",
+      "error_carrier_unavailable": "Le porteur n'est plus disponible.",
+      "error_target_unavailable": "La cible n'est plus disponible."
    }
 }
