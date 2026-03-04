@@ -86,14 +86,15 @@ RegisterNetEvent("randol_carry:respondRequest", function(carrierId, accepted)
     if pendingRequests[src] ~= carrierId then
         return
     end
+
     pendingRequests[src] = nil
 
-    if not accepted then
-        notify(carrierId, locale("carry.error_request_denied"), "error")
+    if not GetPlayerName(carrierId) then
         return
     end
 
-    if not GetPlayerName(carrierId) then
+    if not accepted then
+        notify(carrierId, locale("carry.error_request_denied"), "error")
         return
     end
 

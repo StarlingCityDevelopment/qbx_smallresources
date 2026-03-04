@@ -36,6 +36,7 @@ local function carryingLoop(id)
         lib.showTextUI(locale("carry.in_progress"), {
             icon = "fas fa-person-carry",
         })
+
         Wait(100)
     end
 
@@ -93,17 +94,15 @@ local function beingCarriedLoop(id)
 end
 
 RegisterNetEvent("randol_carry:receiveRequest", function(carrierId, carrierName)
-    CreateThread(function()
-        local result = lib.alertDialog({
-            header = locale("carry.request_header"),
-            content = locale("carry.request_message", carrierName),
-            centered = true,
-            cancel = true,
-            labels = { confirm = locale("carry.request_accept"), cancel = locale("carry.request_deny") },
-        })
+    local result = lib.alertDialog({
+        header = locale("carry.request_header"),
+        content = locale("carry.request_message", carrierName),
+        centered = true,
+        cancel = true,
+        labels = { confirm = locale("carry.request_accept"), cancel = locale("carry.request_deny") },
+    })
 
-        TriggerServerEvent("randol_carry:respondRequest", carrierId, result == "confirm")
-    end)
+    TriggerServerEvent("randol_carry:respondRequest", carrierId, result == "confirm")
 end)
 
 exports.ox_target:addGlobalPlayer({
@@ -130,17 +129,13 @@ exports.ox_target:addGlobalPlayer({
 })
 
 AddStateBagChangeHandler("isCarrying", ("player:%s"):format(cache.serverId), function(_, _, value)
-    if value then
-        CreateThread(function()
-            carryingLoop(value)
-        end)
-    end
+	if value then
+		carryingLoop(value)
+	end
 end)
 
 AddStateBagChangeHandler("beingCarried", ("player:%s"):format(cache.serverId), function(_, _, value)
-    if value then
-        CreateThread(function()
-            beingCarriedLoop(value)
-        end)
-    end
+	if value then
+		beingCarriedLoop(value)
+	end
 end)
